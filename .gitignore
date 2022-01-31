@@ -1,0 +1,8 @@
+quote.log
+.quote.*
+scratch
+rdf-files.tar.bz2
+*.new
+*.sw*
+export/
+tmp/
