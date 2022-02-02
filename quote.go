@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
+	"strconv"
+	"time"
 )
 
 func main() {
@@ -48,5 +51,22 @@ func main() {
 	if *quiet == false && *manual == 0 {
 		fmt.Print("finding a quote, just a moment\n")
 		fmt.Print("for more information, please see quote.log\n\n")
+	}
+
+	// main process loop
+	for {
+		var number string
+
+		if *manual != 0 {
+			number = strconv.Itoa(*manual)
+		} else {
+			rand.Seed(time.Now().UnixNano())
+			max := len(catalog) - 1
+			rand := rand.Intn(max + 1)
+			number = catalog[rand]
+		}
+
+		file := number + ".txt"
+		page_link := "https://gutenberg.org/ebooks/" + number
 	}
 }
