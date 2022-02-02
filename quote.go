@@ -68,5 +68,16 @@ func main() {
 
 		file := number + ".txt"
 		page_link := "https://gutenberg.org/ebooks/" + number
+		book_link := "https://gutenberg.pglaf.org"
+
+		if len(number) == 1 {
+			book_link = book_link + "/0/" + number + "/" + number + ".txt"
+		} else {
+			for i := 0; i <= len(number)-2; i++ {
+				book_link = book_link + "/" + string(number[i])
+			}
+
+			book_link = book_link + "/" + number + "/" + number + ".txt"
+		}
 	}
 }
