@@ -25,4 +25,11 @@ func main() {
 		flag.Usage()
 		os.Exit(2)
 	}
+
+	// TODO: load env file for twitter settings
+
+	if *quiet == false && *manual == 0 {
+		fmt.Print("finding a quote, just a moment\n")
+		fmt.Print("for more information, please see quote.log\n\n")
+	}
 }
