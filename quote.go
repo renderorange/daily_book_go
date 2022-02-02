@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -25,6 +26,22 @@ func main() {
 		flag.Usage()
 		os.Exit(2)
 	}
+
+	catalog_fh, err := os.Open("catalog.txt")
+	if err != nil {
+		fmt.Print(err, "\n")
+		os.Exit(2)
+	}
+
+	scanner := bufio.NewScanner(catalog_fh)
+	scanner.Split(bufio.ScanLines)
+
+	var catalog []string
+	for scanner.Scan() {
+		catalog = append(catalog, scanner.Text())
+	}
+
+	catalog_fh.Close()
 
 	// TODO: load env file for twitter settings
 
