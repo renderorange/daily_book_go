@@ -16,30 +16,16 @@ import (
 
 func main() {
 	flag.Usage = func() {
-		fmt.Printf("usage: %s [-d] [-m] <book number> [-q] [-t]\n\n", os.Args[0])
+		fmt.Printf("usage: %s [-d] [-m] <book number>\n\n", os.Args[0])
 
 		fmt.Print("options:\n")
 		flag.PrintDefaults()
 	}
 
-	twitter := flag.Bool("t", false, "post the quote to twitter (requires additional configuration)")
-	quiet := flag.Bool("q", false, "don't display any output")
 	manual := flag.Int("m", 0, "manually specify the book number")
 	debug := flag.Bool("d", false, "print more information during the run")
 
 	flag.Parse()
-
-	if *twitter == false && *quiet == true {
-		fmt.Print("flag -q implies -t\n")
-		flag.Usage()
-		os.Exit(2)
-	}
-
-	if *quiet == true && *debug == true {
-		fmt.Print("flag -q and -d are mutually exclusive\n")
-		flag.Usage()
-		os.Exit(2)
-	}
 
 	catalog_fh, err := os.Open("catalog.txt")
 	if err != nil {
@@ -56,13 +42,6 @@ func main() {
 	}
 
 	catalog_fh.Close()
-
-	// TODO: load env file for twitter settings
-
-	if *quiet == false && *manual == 0 {
-		fmt.Print("finding a quote, just a moment\n")
-		fmt.Print("for more information, please see quote.log\n\n")
-	}
 
 MAIN:
 	for {
@@ -282,10 +261,8 @@ MAIN:
 			continue MAIN
 		}
 
-		if *quiet == false {
-			// TODO: select random from quotes if > 1 quote is found
-			fmt.Print("\ntitle: ", title, "\n", "author: ", author, "\n\n", quotes[len(quotes)-1], page_link, "\n\n")
-			break
-		}
+		// TODO: select random from quotes if > 1 quote is found
+		fmt.Print("\ntitle: ", title, "\n", "author: ", author, "\n\n", quotes[len(quotes)-1], page_link, "\n\n")
+		break
 	}
 }
