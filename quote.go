@@ -22,8 +22,8 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	manual := flag.Int("m", 0, "manually specify the book number")
 	debug := flag.Bool("d", false, "print more information during the run")
+	manual := flag.Int("m", 0, "manually specify the book number")
 
 	flag.Parse()
 
