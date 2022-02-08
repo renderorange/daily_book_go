@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -18,7 +19,7 @@ func main() {
 	flag.Usage = func() {
 		fmt.Printf("usage: %s [-d] [-m] <book number>\n\n", os.Args[0])
 
-		fmt.Print("options:\n")
+		fmt.Println("options:")
 		flag.PrintDefaults()
 	}
 
@@ -27,10 +28,11 @@ func main() {
 
 	flag.Parse()
 
+	log.SetFlags(0)
+
 	catalog_fh, err := os.Open("catalog.txt")
 	if err != nil {
-		fmt.Print(err, "\n")
-		os.Exit(2)
+		log.Fatalln("[error]", err)
 	}
 
 	scanner := bufio.NewScanner(catalog_fh)
@@ -71,21 +73,19 @@ MAIN:
 		}
 
 		if *debug {
-			fmt.Print("[debug] page_link: ", page_link, "\n")
-			fmt.Print("[debug] book_link: ", book_link, "\n")
+			log.Println("[debug] page_link:", page_link)
+			log.Println("[debug] book_link:", book_link)
 		}
 
 		resp, err := http.Get(book_link)
 		if err != nil {
 			if *manual != 0 {
-				fmt.Print(err)
-				os.Exit(2)
+				log.Fatalln("[error]", err)
 			} else if download_error_count == 20 {
-				fmt.Print("[error] download limit (20) exceeded\n")
-				os.Exit(2)
+				log.Fatalln("[error] download limit (20) exceeded")
 			} else {
 				download_error_count = download_error_count + 1
-				fmt.Print(err)
+				log.Println("[error]", err)
 				continue
 			}
 		}
@@ -93,8 +93,7 @@ MAIN:
 
 		book_bytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Print(err)
-			os.Exit(2)
+			log.Fatalln("[error]", err)
 		}
 
 		scanner := bufio.NewScanner(strings.NewReader(string(book_bytes)))
@@ -105,7 +104,7 @@ MAIN:
 
 		_head, _body, _foot := 1, 0, 0
 		if *debug {
-			fmt.Print("[debug] parser is in head\n")
+			log.Println("[debug] parser is in head")
 		}
 
 	PARSE:
@@ -116,7 +115,7 @@ MAIN:
 			// better than 1 MatchString
 			if strings.Contains(line, "START OF THE PROJECT") || strings.Contains(line, "START OF THIS PROJECT") {
 				if *debug {
-					fmt.Print("[debug] parser is in body\n")
+					log.Println("[debug] parser is in body")
 				}
 				_head = 0
 				_body = 1
@@ -125,7 +124,7 @@ MAIN:
 
 			if strings.Contains(line, "END OF THE PROJECT") || strings.Contains(line, "END OF THIS PROJECT") {
 				if *debug {
-					fmt.Print("[debug] parser is in footer\n")
+					log.Println("[debug] parser is in footer")
 				}
 				_body = 0
 				_foot = 1
@@ -150,7 +149,7 @@ MAIN:
 
 		for _, line := range header {
 			if strings.Contains(line, "The New McGuffey") {
-				fmt.Print("[info] ebook is The New McGuffey Reader - ", number, "\n")
+				log.Println("[info] ebook is The New McGuffey Reader -", number)
 				if *manual != 0 {
 					os.Exit(0)
 				}
@@ -159,7 +158,7 @@ MAIN:
 
 			if strings.Contains(line, "Language:") {
 				if strings.Contains(line, "English") == false {
-					fmt.Print("[info] ebook isn't in English - ", number, "\n")
+					log.Println("[info] ebook isn't in English -", number)
 					if *manual != 0 {
 						os.Exit(0)
 					}
@@ -173,15 +172,15 @@ MAIN:
 				if len(match) == 2 {
 					title = match[1]
 					if *debug {
-						fmt.Print("[debug] title: ", title, "\n")
+						log.Println("[debug] title:", title)
 					}
 				} else {
-					fmt.Print("[error] there was an issue parsing title - ", number, "\n")
 					if *debug {
-						fmt.Print("[debug] title match: ", match, "\n")
+						log.Println("[debug] title match:", match)
 					}
+					log.Println("[error] there was an issue parsing title -", number)
 					if *manual != 0 {
-						os.Exit(2)
+						os.Exit(1)
 					}
 					continue MAIN
 				}
@@ -193,15 +192,15 @@ MAIN:
 				if len(match) == 2 {
 					author = match[1]
 					if *debug {
-						fmt.Print("[debug] author: ", author, "\n")
+						log.Println("[debug] author:", author)
 					}
 				} else {
-					fmt.Print("[error] there was an issue parsing author - ", number, "\n")
 					if *debug {
-						fmt.Print("[debug] author match: ", match, "\n")
+						log.Println("[debug] author match:", match)
 					}
+					log.Println("[error] there was an issue parsing author -", number)
 					if *manual != 0 {
-						os.Exit(2)
+						os.Exit(1)
 					}
 					continue MAIN
 				}
@@ -209,7 +208,7 @@ MAIN:
 		}
 
 		if len(title) == 0 {
-			fmt.Print("[info] title was not found - ", number, "\n")
+			log.Println("[info] title was not found -", number)
 			if *manual != 0 {
 				os.Exit(0)
 			}
@@ -218,7 +217,7 @@ MAIN:
 		}
 
 		if len(author) == 0 {
-			fmt.Print("[info] author was not found - ", number, "\n")
+			log.Println("[info] author was not found -", number)
 			if *manual != 0 {
 				os.Exit(0)
 			}
@@ -237,7 +236,7 @@ MAIN:
 		}
 
 		if *debug {
-			fmt.Print("[debug] paragraphs found: ", len(paragraphs), "\n")
+			log.Println("[debug] paragraphs found:", len(paragraphs))
 		}
 
 		var quotes []string
@@ -247,14 +246,14 @@ MAIN:
 				if len(paragraph) > 90 && len(paragraph) < 113 {
 					quotes = append(quotes, paragraph)
 					if *debug {
-						fmt.Print("[debug] quote was found: ", paragraph, "\n")
+						log.Println("[debug] quote was found:", paragraph)
 					}
 				}
 			}
 		}
 
 		if len(quotes) == 0 {
-			fmt.Print("[info] quote was not found - ", number, "\n")
+			log.Println("[info] quote was not found -", number)
 			if *manual != 0 {
 				os.Exit(0)
 			}
@@ -262,7 +261,7 @@ MAIN:
 		}
 
 		// TODO: select random from quotes if > 1 quote is found
-		fmt.Print("\ntitle: ", title, "\n", "author: ", author, "\n\n", quotes[len(quotes)-1], page_link, "\n\n")
+		fmt.Printf("\ntitle: %s\nauthor: %s\n\n%s %s\n\n", title, author, quotes[len(quotes)-1], page_link)
 		break
 	}
 }
