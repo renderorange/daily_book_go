@@ -169,7 +169,6 @@ MAIN:
 			}
 		}
 
-	PROCESS:
 		for _, line := range header {
 			if strings.Contains(line, "The New McGuffey") {
 				fmt.Print("[info] ebook is The New McGuffey Reader - ", number, "\n")
@@ -245,6 +244,48 @@ MAIN:
 				os.Exit(0)
 			}
 			continue MAIN
+		}
+
+		var build_variable string
+		var paragraphs []string
+		for _, line := range body {
+			if len(line) != 0 {
+				build_variable = build_variable + line + " "
+			} else {
+				paragraphs = append(paragraphs, build_variable)
+				build_variable = ""
+			}
+		}
+
+		if *debug {
+			fmt.Print("[debug] paragraphs found: ", len(paragraphs), "\n")
+		}
+
+		var quotes []string
+		for _, paragraph := range paragraphs {
+			quote_regex, _ := regexp.Compile(`^["].+["]\s*$`)
+			if quote_regex.MatchString(paragraph) {
+				if len(paragraph) > 90 && len(paragraph) < 113 {
+					quotes = append(quotes, paragraph)
+					if *debug {
+						fmt.Print("[debug] quote was found: ", paragraph, "\n")
+					}
+				}
+			}
+		}
+
+		if len(quotes) == 0 {
+			fmt.Print("[info] quote was not found - ", number, "\n")
+			if *manual != 0 {
+				os.Exit(0)
+			}
+			continue MAIN
+		}
+
+		if *quiet == false {
+			// TODO: select random from quotes if > 1 quote is found
+			fmt.Print("\ntitle: ", title, "\n", "author: ", author, "\n\n", quotes[len(quotes)-1], page_link, "\n\n")
+			break
 		}
 	}
 }
