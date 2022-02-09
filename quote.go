@@ -16,6 +16,59 @@ import (
 	"time"
 )
 
+func parse(debug *bool, book string) ([]string, []string, []string) {
+	scanner := bufio.NewScanner(strings.NewReader(book))
+	scanner.Split(bufio.ScanLines)
+
+	var header, body, footer []string
+	_head, _body, _foot := 1, 0, 0
+
+	if *debug {
+		log.Println("[debug] parser is in head")
+	}
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// despite not being as concise, the performance of 2 Contains is still
+		// better than 1 MatchString
+		if strings.Contains(line, "START OF THE PROJECT") || strings.Contains(line, "START OF THIS PROJECT") {
+			if *debug {
+				log.Println("[debug] parser is in body")
+			}
+			_head = 0
+			_body = 1
+			continue
+		}
+
+		if strings.Contains(line, "END OF THE PROJECT") || strings.Contains(line, "END OF THIS PROJECT") {
+			if *debug {
+				log.Println("[debug] parser is in footer")
+			}
+			_body = 0
+			_foot = 1
+			continue
+		}
+
+		// remove whitespace at the start and end of lines
+		line = strings.Trim(line, " ")
+
+		// correct double spacing
+		double_spacing_regex, _ := regexp.Compile(`\s{2}`)
+		line = double_spacing_regex.ReplaceAllString(line, " ")
+
+		if _head == 1 {
+			header = append(header, line)
+		} else if _body == 1 {
+			body = append(body, line)
+		} else if _foot == 1 {
+			footer = append(footer, line)
+		}
+	}
+
+	return header, body, footer
+}
+
 func process(debug *bool, header, body []string) (string, string, []string, error) {
 	var title, author string
 	var quotes []string
@@ -124,11 +177,9 @@ func main() {
 	for scanner.Scan() {
 		catalog = append(catalog, scanner.Text())
 	}
-
 	catalog_fh.Close()
 
 	download_error_count := 0
-MAIN:
 	for {
 		var number string
 
@@ -180,55 +231,9 @@ MAIN:
 			log.Fatalln("[error]", err)
 		}
 
-		scanner := bufio.NewScanner(strings.NewReader(string(book_bytes)))
-		scanner.Split(bufio.ScanLines)
-
-		var header, body, footer []string
-
-		_head, _body, _foot := 1, 0, 0
-		if *debug {
-			log.Println("[debug] parser is in head")
-		}
-
-	PARSE:
-		for scanner.Scan() {
-			line := scanner.Text()
-
-			// despite not being as concise, the performance of 2 Contains is still
-			// better than 1 MatchString
-			if strings.Contains(line, "START OF THE PROJECT") || strings.Contains(line, "START OF THIS PROJECT") {
-				if *debug {
-					log.Println("[debug] parser is in body")
-				}
-				_head = 0
-				_body = 1
-				continue PARSE
-			}
-
-			if strings.Contains(line, "END OF THE PROJECT") || strings.Contains(line, "END OF THIS PROJECT") {
-				if *debug {
-					log.Println("[debug] parser is in footer")
-				}
-				_body = 0
-				_foot = 1
-				continue PARSE
-			}
-
-			// remove whitespace at the start and end of lines
-			line = strings.Trim(line, " ")
-
-			// correct double spacing
-			double_spacing_regex, _ := regexp.Compile(`\s{2}`)
-			line = double_spacing_regex.ReplaceAllString(line, " ")
-
-			if _head == 1 {
-				header = append(header, line)
-			} else if _body == 1 {
-				body = append(body, line)
-			} else if _foot == 1 {
-				footer = append(footer, line)
-			}
-		}
+		// no data is yet needed from the parsed footer, so don't
+		// store the return.
+		header, body, _ := parse(debug, string(book_bytes))
 
 		title, author, quotes, err := process(debug, header, body)
 		if err != nil {
@@ -236,7 +241,7 @@ MAIN:
 			if *manual != 0 {
 				os.Exit(0)
 			}
-			continue MAIN
+			continue
 		}
 
 		var quote_index int
