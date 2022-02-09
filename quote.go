@@ -54,9 +54,7 @@ MAIN:
 			number = strconv.Itoa(*manual)
 		} else {
 			rand.Seed(time.Now().UnixNano())
-			max := len(catalog) - 1
-			rand := rand.Intn(max + 1)
-			number = catalog[rand]
+			number = catalog[rand.Intn(len(catalog)-1)]
 		}
 
 		page_link := "https://gutenberg.org/ebooks/" + number
