@@ -45,10 +45,10 @@ func main() {
 
 	catalog_fh.Close()
 
+	download_error_count := 0
 MAIN:
 	for {
 		var number string
-		download_error_count := 0
 
 		if *manual != 0 {
 			number = strconv.Itoa(*manual)
@@ -79,13 +79,17 @@ MAIN:
 
 		resp, err := http.Get(book_link)
 		if err != nil {
+			log.Fatalln("[error]", err)
+		}
+
+		if resp.StatusCode != 200 {
+			download_error_count = download_error_count + 1
+			log.Println("[error] download response was", resp.StatusCode, "-", number)
 			if *manual != 0 {
-				log.Fatalln("[error]", err)
+				os.Exit(1)
 			} else if download_error_count == 20 {
-				log.Fatalln("[error] download limit (20) exceeded")
+				log.Fatalln("[error] download limit (20) reached")
 			} else {
-				download_error_count = download_error_count + 1
-				log.Println("[error]", err)
 				continue
 			}
 		}
