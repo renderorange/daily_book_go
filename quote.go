@@ -244,8 +244,14 @@ MAIN:
 			continue MAIN
 		}
 
-		// TODO: select random from quotes if > 1 quote is found
-		fmt.Printf("\ntitle: %s\nauthor: %s\n\n%s %s\n\n", title, author, quotes[len(quotes)-1], page_link)
+		var quote_index int
+		if len(quotes) > 1 {
+			rand.Seed(time.Now().UnixNano())
+			quote_index = rand.Intn(len(quotes) - 1)
+		} else {
+			quote_index = len(quotes) - 1
+		}
+		fmt.Printf("\ntitle: %s\nauthor: %s\n\n%s %s\n\n", title, author, quotes[quote_index], page_link)
 		break
 	}
 }
