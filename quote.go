@@ -174,15 +174,6 @@ MAIN:
 					if *debug {
 						log.Println("[debug] title:", title)
 					}
-				} else {
-					if *debug {
-						log.Println("[debug] title match:", match)
-					}
-					log.Println("[error] there was an issue parsing title -", number)
-					if *manual != 0 {
-						os.Exit(1)
-					}
-					continue MAIN
 				}
 			}
 
@@ -194,15 +185,6 @@ MAIN:
 					if *debug {
 						log.Println("[debug] author:", author)
 					}
-				} else {
-					if *debug {
-						log.Println("[debug] author match:", match)
-					}
-					log.Println("[error] there was an issue parsing author -", number)
-					if *manual != 0 {
-						os.Exit(1)
-					}
-					continue MAIN
 				}
 			}
 		}
