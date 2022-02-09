@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -14,6 +15,87 @@ import (
 	"strings"
 	"time"
 )
+
+func process(debug *bool, header, body []string) (string, string, []string, error) {
+	var title, author string
+	var quotes []string
+
+	for _, line := range header {
+		if strings.Contains(line, "The New McGuffey") {
+			return title, author, quotes, errors.New("[info] ebook is The New McGuffey Reader")
+		}
+
+		if strings.Contains(line, "Language:") {
+			if strings.Contains(line, "English") == false {
+				return title, author, quotes, errors.New("[info] ebook isn't in English")
+			}
+		}
+
+		if strings.Contains(line, "Title:") {
+			language_regex, _ := regexp.Compile(`^Title:\s+(.+)`)
+			match := language_regex.FindStringSubmatch(line)
+			if len(match) == 2 {
+				title = match[1]
+				if *debug {
+					log.Println("[debug] title:", title)
+				}
+			}
+		}
+
+		if strings.Contains(line, "Author:") {
+			author_regex, _ := regexp.Compile(`^Author:\s+(.+)`)
+			match := author_regex.FindStringSubmatch(line)
+			if len(match) == 2 {
+				author = match[1]
+				if *debug {
+					log.Println("[debug] author:", author)
+				}
+			}
+		}
+	}
+
+	if len(title) == 0 {
+		return title, author, quotes, errors.New("[info] title was not found")
+
+	}
+
+	if len(author) == 0 {
+		return title, author, quotes, errors.New("[info] author was not found")
+	}
+
+	var build_variable string
+	var paragraphs []string
+	for _, line := range body {
+		if len(line) != 0 {
+			build_variable = build_variable + line + " "
+		} else {
+			paragraphs = append(paragraphs, build_variable)
+			build_variable = ""
+		}
+	}
+
+	if *debug {
+		log.Println("[debug] paragraphs found:", len(paragraphs))
+	}
+
+	for _, paragraph := range paragraphs {
+		quote_regex, _ := regexp.Compile(`^["].+["]\s*$`)
+		if quote_regex.MatchString(paragraph) {
+			if len(paragraph) > 90 && len(paragraph) < 113 {
+				quotes = append(quotes, paragraph)
+				if *debug {
+					log.Println("[debug] quote was found:", paragraph)
+				}
+			}
+		}
+	}
+
+	if len(quotes) == 0 {
+		return title, author, quotes, errors.New("[info] quote was not found")
+	}
+
+	return title, author, quotes, nil
+}
 
 func main() {
 	flag.Usage = func() {
@@ -101,7 +183,6 @@ MAIN:
 		scanner := bufio.NewScanner(strings.NewReader(string(book_bytes)))
 		scanner.Split(bufio.ScanLines)
 
-		var title, author string
 		var header, body, footer []string
 
 		_head, _body, _foot := 1, 0, 0
@@ -149,95 +230,9 @@ MAIN:
 			}
 		}
 
-		for _, line := range header {
-			if strings.Contains(line, "The New McGuffey") {
-				log.Println("[info] ebook is The New McGuffey Reader -", number)
-				if *manual != 0 {
-					os.Exit(0)
-				}
-				continue MAIN
-			}
-
-			if strings.Contains(line, "Language:") {
-				if strings.Contains(line, "English") == false {
-					log.Println("[info] ebook isn't in English -", number)
-					if *manual != 0 {
-						os.Exit(0)
-					}
-					continue MAIN
-				}
-			}
-
-			if strings.Contains(line, "Title:") {
-				language_regex, _ := regexp.Compile(`^Title:\s+(.+)`)
-				match := language_regex.FindStringSubmatch(line)
-				if len(match) == 2 {
-					title = match[1]
-					if *debug {
-						log.Println("[debug] title:", title)
-					}
-				}
-			}
-
-			if strings.Contains(line, "Author:") {
-				author_regex, _ := regexp.Compile(`^Author:\s+(.+)`)
-				match := author_regex.FindStringSubmatch(line)
-				if len(match) == 2 {
-					author = match[1]
-					if *debug {
-						log.Println("[debug] author:", author)
-					}
-				}
-			}
-		}
-
-		if len(title) == 0 {
-			log.Println("[info] title was not found -", number)
-			if *manual != 0 {
-				os.Exit(0)
-			}
-			continue MAIN
-
-		}
-
-		if len(author) == 0 {
-			log.Println("[info] author was not found -", number)
-			if *manual != 0 {
-				os.Exit(0)
-			}
-			continue MAIN
-		}
-
-		var build_variable string
-		var paragraphs []string
-		for _, line := range body {
-			if len(line) != 0 {
-				build_variable = build_variable + line + " "
-			} else {
-				paragraphs = append(paragraphs, build_variable)
-				build_variable = ""
-			}
-		}
-
-		if *debug {
-			log.Println("[debug] paragraphs found:", len(paragraphs))
-		}
-
-		var quotes []string
-		for _, paragraph := range paragraphs {
-			quote_regex, _ := regexp.Compile(`^["].+["]\s*$`)
-			if quote_regex.MatchString(paragraph) {
-				if len(paragraph) > 90 && len(paragraph) < 113 {
-					quotes = append(quotes, paragraph)
-					if *debug {
-						log.Println("[debug] quote was found:", paragraph)
-					}
-				}
-			}
-		}
-
-		if len(quotes) == 0 {
-			log.Println("[info] quote was not found -", number)
+		title, author, quotes, err := process(debug, header, body)
+		if err != nil {
+			log.Println(err, "-", number)
 			if *manual != 0 {
 				os.Exit(0)
 			}
