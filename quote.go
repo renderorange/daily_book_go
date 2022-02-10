@@ -170,10 +170,8 @@ func main() {
 		log.Fatalln("[error]", err)
 	}
 
-	scanner := bufio.NewScanner(catalog_fh)
-	scanner.Split(bufio.ScanLines)
-
 	var catalog []string
+	scanner := bufio.NewScanner(catalog_fh)
 	for scanner.Scan() {
 		catalog = append(catalog, scanner.Text())
 	}
