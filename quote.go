@@ -92,12 +92,12 @@ func process(debug *bool, header, body []string) (string, string, []string, erro
 
 	for _, line := range header {
 		if strings.Contains(line, "The New McGuffey") {
-			return title, author, quotes, errors.New("[info] ebook is The New McGuffey Reader")
+			return "", "", nil, errors.New("[info] ebook is The New McGuffey Reader")
 		}
 
 		if strings.Contains(line, "Language:") {
 			if strings.Contains(line, "English") == false {
-				return title, author, quotes, errors.New("[info] ebook isn't in English")
+				return "", "", nil, errors.New("[info] ebook isn't in English")
 			}
 		}
 
@@ -125,12 +125,12 @@ func process(debug *bool, header, body []string) (string, string, []string, erro
 	}
 
 	if len(title) == 0 {
-		return title, author, quotes, errors.New("[info] title was not found")
+		return "", "", nil, errors.New("[info] title was not found")
 
 	}
 
 	if len(author) == 0 {
-		return title, author, quotes, errors.New("[info] author was not found")
+		return "", "", nil, errors.New("[info] author was not found")
 	}
 
 	var build_variable string
@@ -161,7 +161,7 @@ func process(debug *bool, header, body []string) (string, string, []string, erro
 	}
 
 	if len(quotes) == 0 {
-		return title, author, quotes, errors.New("[info] quote was not found")
+		return "", "", nil, errors.New("[info] quote was not found")
 	}
 
 	return title, author, quotes, nil
