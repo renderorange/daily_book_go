@@ -38,7 +38,7 @@ func parse(debug *bool, book string) ([]string, []string, []string) {
 	scanner.Split(bufio.ScanLines)
 
 	var header, body, footer []string
-	_head, _body, _foot := 1, 0, 0
+	markHead, markBody, markFoot := 1, 0, 0
 
 	if opts.debug {
 		log.Println("[debug] parser is in head")
@@ -53,8 +53,8 @@ func parse(debug *bool, book string) ([]string, []string, []string) {
 			if opts.debug {
 				log.Println("[debug] parser is in body")
 			}
-			_head = 0
-			_body = 1
+			markHead = 0
+			markBody = 1
 			continue
 		}
 
@@ -62,8 +62,8 @@ func parse(debug *bool, book string) ([]string, []string, []string) {
 			if opts.debug {
 				log.Println("[debug] parser is in footer")
 			}
-			_body = 0
-			_foot = 1
+			markBody = 0
+			markFoot = 1
 			continue
 		}
 
@@ -74,11 +74,11 @@ func parse(debug *bool, book string) ([]string, []string, []string) {
 		double_spacing_regex, _ := regexp.Compile(`\s{2}`)
 		line = double_spacing_regex.ReplaceAllString(line, " ")
 
-		if _head == 1 {
+		if markHead == 1 {
 			header = append(header, line)
-		} else if _body == 1 {
+		} else if markBody == 1 {
 			body = append(body, line)
-		} else if _foot == 1 {
+		} else if markFoot == 1 {
 			footer = append(footer, line)
 		}
 	}
@@ -102,8 +102,8 @@ func process(debug *bool, header, body []string) (string, string, []string, erro
 		}
 
 		if strings.Contains(line, "Title:") {
-			language_regex, _ := regexp.Compile(`^Title:\s+(.+)`)
-			match := language_regex.FindStringSubmatch(line)
+			languageRegex, _ := regexp.Compile(`^Title:\s+(.+)`)
+			match := languageRegex.FindStringSubmatch(line)
 			if len(match) == 2 {
 				title = match[1]
 				if opts.debug {
@@ -113,8 +113,8 @@ func process(debug *bool, header, body []string) (string, string, []string, erro
 		}
 
 		if strings.Contains(line, "Author:") {
-			author_regex, _ := regexp.Compile(`^Author:\s+(.+)`)
-			match := author_regex.FindStringSubmatch(line)
+			authorRegex, _ := regexp.Compile(`^Author:\s+(.+)`)
+			match := authorRegex.FindStringSubmatch(line)
 			if len(match) == 2 {
 				author = match[1]
 				if opts.debug {
@@ -133,14 +133,14 @@ func process(debug *bool, header, body []string) (string, string, []string, erro
 		return "", "", nil, errors.New("[info] author was not found")
 	}
 
-	var build_variable string
+	var buildVariable string
 	var paragraphs []string
 	for _, line := range body {
 		if len(line) != 0 {
-			build_variable = build_variable + line + " "
+			buildVariable = buildVariable + line + " "
 		} else {
-			paragraphs = append(paragraphs, build_variable)
-			build_variable = ""
+			paragraphs = append(paragraphs, buildVariable)
+			buildVariable = ""
 		}
 	}
 
@@ -149,8 +149,8 @@ func process(debug *bool, header, body []string) (string, string, []string, erro
 	}
 
 	for _, paragraph := range paragraphs {
-		quote_regex, _ := regexp.Compile(`^["].+["]\s*$`)
-		if quote_regex.MatchString(paragraph) {
+		quoteRegex, _ := regexp.Compile(`^["].+["]\s*$`)
+		if quoteRegex.MatchString(paragraph) {
 			if len(paragraph) > 90 && len(paragraph) < 113 {
 				quotes = append(quotes, paragraph)
 				if opts.debug {
@@ -184,7 +184,7 @@ func main() {
 	}
 	catalog_fh.Close()
 
-	download_error_count := 0
+	downloadErrorCount := 0
 	for {
 		var number string
 
@@ -195,35 +195,35 @@ func main() {
 			number = catalog[rand.Intn(len(catalog)-1)]
 		}
 
-		page_link := "https://gutenberg.org/ebooks/" + number
-		book_link := "https://gutenberg.pglaf.org"
+		pageLink := "https://gutenberg.org/ebooks/" + number
+		bookLink := "https://gutenberg.pglaf.org"
 
 		if len(number) == 1 {
-			book_link = book_link + "/0/" + number + "/" + number + ".txt"
+			bookLink = bookLink + "/0/" + number + "/" + number + ".txt"
 		} else {
 			for i := 0; i <= len(number)-2; i++ {
-				book_link = book_link + "/" + string(number[i])
+				bookLink = bookLink + "/" + string(number[i])
 			}
 
-			book_link = book_link + "/" + number + "/" + number + ".txt"
+			bookLink = bookLink + "/" + number + "/" + number + ".txt"
 		}
 
 		if opts.debug {
-			log.Println("[debug] page_link:", page_link)
-			log.Println("[debug] book_link:", book_link)
+			log.Println("[debug] page link:", pageLink)
+			log.Println("[debug] book link:", bookLink)
 		}
 
-		resp, err := http.Get(book_link)
+		resp, err := http.Get(bookLink)
 		if err != nil {
 			log.Fatalln("[error]", err)
 		}
 
 		if resp.StatusCode != 200 {
-			download_error_count = download_error_count + 1
+			downloadErrorCount = downloadErrorCount + 1
 			log.Println("[error] download response was", resp.StatusCode, "-", number)
 			if opts.manual != 0 {
 				os.Exit(1)
-			} else if download_error_count == 20 {
+			} else if downloadErrorCount == 20 {
 				log.Fatalln("[error] download limit (20) reached")
 			} else {
 				continue
@@ -231,14 +231,14 @@ func main() {
 		}
 		defer resp.Body.Close()
 
-		book_bytes, err := ioutil.ReadAll(resp.Body)
+		bookBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			log.Fatalln("[error]", err)
 		}
 
 		// no data is yet needed from the parsed footer, so don't
 		// store the return.
-		header, body, _ := parse(&opts.debug, string(book_bytes))
+		header, body, _ := parse(&opts.debug, string(bookBytes))
 
 		title, author, quotes, err := process(&opts.debug, header, body)
 		if err != nil {
@@ -249,14 +249,14 @@ func main() {
 			continue
 		}
 
-		var quote_index int
+		var quoteIndex int
 		if len(quotes) > 1 {
 			rand.Seed(time.Now().UnixNano())
-			quote_index = rand.Intn(len(quotes) - 1)
+			quoteIndex = rand.Intn(len(quotes) - 1)
 		} else {
-			quote_index = len(quotes) - 1
+			quoteIndex = len(quotes) - 1
 		}
-		fmt.Printf("\ntitle: %s\nauthor: %s\n\n%s %s\n\n", title, author, quotes[quote_index], page_link)
+		fmt.Printf("\ntitle: %s\nauthor: %s\n\n%s %s\n\n", title, author, quotes[quoteIndex], pageLink)
 		break
 	}
 }
