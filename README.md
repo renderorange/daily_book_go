@@ -2,6 +2,8 @@
 
 rewrite of [daily_book](https://github.com/renderorange/daily_book) in Go.
 
+`daily_book_go` finds quotes in free ebooks at [project gutenberg](https://www.gutenberg.org) then (TODO) tweets them.
+
 ## USAGE
 
 ```bash
