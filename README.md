@@ -45,8 +45,8 @@ To print more information during the run, `-d` can be defined to send additional
 ```bash
 $ ./quote -m 220 -d 2> stderr.o > stdout.o
 $ cat stderr.o
-[debug] page_link: https://gutenberg.org/ebooks/220
-[debug] book_link: https://gutenberg.pglaf.org/2/2/220/220.txt
+[debug] page link: https://gutenberg.org/ebooks/220
+[debug] book link: https://gutenberg.pglaf.org/2/2/220/220.txt
 [debug] parser is in head
 [debug] parser is in body
 [debug] parser is in footer
