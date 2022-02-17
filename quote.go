@@ -71,8 +71,8 @@ func parse(debug *bool, book string) ([]string, []string, []string) {
 		line = strings.Trim(line, " ")
 
 		// correct double spacing
-		double_spacing_regex, _ := regexp.Compile(`\s{2}`)
-		line = double_spacing_regex.ReplaceAllString(line, " ")
+		doubleSpacingRegex, _ := regexp.Compile(`\s{2}`)
+		line = doubleSpacingRegex.ReplaceAllString(line, " ")
 
 		if markHead == 1 {
 			header = append(header, line)
@@ -172,17 +172,17 @@ func main() {
 
 	log.SetFlags(0)
 
-	catalog_fh, err := os.Open("catalog.txt")
+	catalogFh, err := os.Open("catalog.txt")
 	if err != nil {
 		log.Fatalln("[error]", err)
 	}
 
 	var catalog []string
-	scanner := bufio.NewScanner(catalog_fh)
+	scanner := bufio.NewScanner(catalogFh)
 	for scanner.Scan() {
 		catalog = append(catalog, scanner.Text())
 	}
-	catalog_fh.Close()
+	catalogFh.Close()
 
 	downloadErrorCount := 0
 	for {
