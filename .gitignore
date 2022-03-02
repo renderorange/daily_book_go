@@ -6,3 +6,4 @@ rdf-files.tar.bz2
 *.sw*
 export/
 tmp/
+cache/
