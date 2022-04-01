@@ -187,25 +187,38 @@ func main() {
 	downloadErrorCount := 0
 	for {
 		var number string
+		var book string
 
 		if opts.manual != 0 {
 			number = strconv.Itoa(opts.manual)
+			for _, v := range catalog {
+				if v == number+".txt" || v == number+"-0.txt" {
+					book = v
+					break
+				}
+			}
+			if book == "" {
+				log.Fatalln("[error] book not found -", number)
+			}
 		} else {
 			rand.Seed(time.Now().UnixNano())
-			number = catalog[rand.Intn(len(catalog)-1)]
+			book = catalog[rand.Intn(len(catalog)-1)]
+			numberRegex, _ := regexp.Compile(`^(\d+)`)
+			matches := numberRegex.FindStringSubmatch(book)
+			number = matches[0]
 		}
 
 		pageLink := "https://gutenberg.org/ebooks/" + number
 		bookLink := "https://gutenberg.pglaf.org"
 
 		if len(number) == 1 {
-			bookLink = bookLink + "/0/" + number + "/" + number + ".txt"
+			bookLink = bookLink + "/0/" + number + "/" + book
 		} else {
 			for i := 0; i <= len(number)-2; i++ {
 				bookLink = bookLink + "/" + string(number[i])
 			}
 
-			bookLink = bookLink + "/" + number + "/" + number + ".txt"
+			bookLink = bookLink + "/" + number + "/" + book
 		}
 
 		if opts.debug {
