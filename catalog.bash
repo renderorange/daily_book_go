@@ -53,7 +53,7 @@ RM=$(rm -f rdf-files.tar)
 if [ $? == 1 ]; then warn; else echo 'done'; fi
 
 echo -n 'building the catalog - '
-grep -r txt cache/epub/ | egrep -v "utf-8|-" | cut -d'/' -f3 | sort | uniq > catalog.txt.new
+grep -r txt cache/epub/ | ack --filter cache/epub/ -o --match '\/\d+(?:-0)*\.txt"' | perl -ne 'my $line = $_; $line =~ s/^\///; $line =~ s/"$//; print $line' > catalog.txt.new
 echo 'done'
 
 echo -n 'renaming new and removing the old catalog - '
