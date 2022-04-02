@@ -35,7 +35,7 @@ func init() {
 	flag.BoolVar(&opts.twitter, "t", false, "post the quote to twitter")
 }
 
-func parse(debug *bool, book string) ([]string, []string, []string) {
+func parse(book string) ([]string, []string, []string) {
 	scanner := bufio.NewScanner(strings.NewReader(book))
 	scanner.Split(bufio.ScanLines)
 
@@ -88,7 +88,7 @@ func parse(debug *bool, book string) ([]string, []string, []string) {
 	return header, body, footer
 }
 
-func process(debug *bool, header, body []string) (string, string, []string, error) {
+func process(header, body []string) (string, string, []string, error) {
 	var title, author string
 	var quotes []string
 
@@ -279,9 +279,9 @@ func main() {
 
 		// no data is yet needed from the parsed footer, so don't
 		// store the return.
-		header, body, _ := parse(&opts.debug, string(bookBytes))
+		header, body, _ := parse(string(bookBytes))
 
-		title, author, quotes, err := process(&opts.debug, header, body)
+		title, author, quotes, err := process(header, body)
 		if err != nil {
 			log.Println(err, "-", number)
 			if opts.manual != 0 {
