@@ -5,6 +5,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/dghubble/go-twitter/twitter"
+	"github.com/dghubble/oauth1"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -197,7 +199,6 @@ func main() {
 		if twitterCredentials.consumerKey == "" || twitterCredentials.consumerSecret == "" || twitterCredentials.accessToken == "" || twitterCredentials.accessTokenSecret == "" {
 			log.Fatalln("[error] twitter API credentials are not configured")
 		}
-
 	}
 
 	catalogFh, err := os.Open("catalog.txt")
@@ -297,7 +298,27 @@ func main() {
 		} else {
 			quoteIndex = len(quotes) - 1
 		}
-		fmt.Printf("\ntitle: %s\nauthor: %s\n\n%s %s\n\n", title, author, quotes[quoteIndex], pageLink)
+
+		quote := quotes[quoteIndex]
+
+		fmt.Printf("\ntitle: %s\nauthor: %s\n\n%s %s\n\n", title, author, quote, pageLink)
+
+		if opts.twitter {
+			if opts.debug {
+				log.Println("[debug] posting to twitter")
+			}
+
+			config := oauth1.NewConfig(twitterCredentials.consumerKey, twitterCredentials.consumerSecret)
+			token := oauth1.NewToken(twitterCredentials.accessToken, twitterCredentials.accessTokenSecret)
+			httpClient := config.Client(oauth1.NoContext, token)
+			client := twitter.NewClient(httpClient)
+
+			_, _, err := client.Statuses.Update(quote+" "+pageLink, nil)
+			if err != nil {
+				log.Fatalln("[error]", err)
+			}
+		}
+
 		break
 	}
 }
