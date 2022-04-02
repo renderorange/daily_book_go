@@ -17,13 +17,14 @@ import (
 )
 
 var opts struct {
-	debug  bool
-	manual int
+	debug   bool
+	manual  int
+	twitter bool
 }
 
 func init() {
 	flag.Usage = func() {
-		fmt.Printf("usage: %s [-d] [-m] <book number>\n\n", os.Args[0])
+		fmt.Printf("usage: %s [-d] [-m] <book number> [-t]\n\n", os.Args[0])
 
 		fmt.Println("options:")
 		flag.PrintDefaults()
@@ -31,6 +32,7 @@ func init() {
 
 	flag.BoolVar(&opts.debug, "d", false, "print more information during the run")
 	flag.IntVar(&opts.manual, "m", 0, "manually specify the book number")
+	flag.BoolVar(&opts.twitter, "t", false, "post the quote to twitter")
 }
 
 func parse(debug *bool, book string) ([]string, []string, []string) {
@@ -171,6 +173,32 @@ func main() {
 	flag.Parse()
 
 	log.SetFlags(0)
+
+	var twitterCredentials struct {
+		consumerKey       string
+		consumerSecret    string
+		accessToken       string
+		accessTokenSecret string
+	}
+
+	if opts.twitter {
+		twitterCredentials.consumerKey = os.Getenv("TWITTER_CONSUMER_KEY")
+		twitterCredentials.consumerSecret = os.Getenv("TWITTER_CONSUMER_SECRET")
+		twitterCredentials.accessToken = os.Getenv("TWITTER_ACCESS_TOKEN")
+		twitterCredentials.accessTokenSecret = os.Getenv("TWITTER_ACCESS_TOKEN_SECRET")
+
+		if opts.debug {
+			log.Println("[debug] twitter consumer key:", twitterCredentials.consumerKey)
+			log.Println("[debug] twitter consumer secret:", twitterCredentials.consumerSecret)
+			log.Println("[debug] twitter access token:", twitterCredentials.accessToken)
+			log.Println("[debug] twitter access token secret:", twitterCredentials.accessTokenSecret)
+		}
+
+		if twitterCredentials.consumerKey == "" || twitterCredentials.consumerSecret == "" || twitterCredentials.accessToken == "" || twitterCredentials.accessTokenSecret == "" {
+			log.Fatalln("[error] twitter API credentials are not configured")
+		}
+
+	}
 
 	catalogFh, err := os.Open("catalog.txt")
 	if err != nil {
