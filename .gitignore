@@ -1,4 +1,7 @@
+quote
 quote.log
+stderr.o
+stdout.o
 .quote.*
 scratch
 rdf-files.tar.bz2
