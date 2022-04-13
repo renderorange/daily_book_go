@@ -37,6 +37,12 @@ func init() {
 	flag.BoolVar(&opts.twitter, "t", false, "post the quote to twitter")
 }
 
+func getTimestamp() string {
+	now := time.Now()
+	sec := now.Unix()
+	return strconv.Itoa(int(sec))
+}
+
 func parse(book string) ([]string, []string, []string) {
 	scanner := bufio.NewScanner(strings.NewReader(book))
 	scanner.Split(bufio.ScanLines)
@@ -45,7 +51,7 @@ func parse(book string) ([]string, []string, []string) {
 	markHead, markBody, markFoot := 1, 0, 0
 
 	if opts.debug {
-		log.Println("[debug] parser is in head")
+		log.Println("[" + getTimestamp() + "] [debug] parser is in head")
 	}
 
 	for scanner.Scan() {
@@ -55,7 +61,7 @@ func parse(book string) ([]string, []string, []string) {
 		// better than 1 MatchString
 		if strings.Contains(line, "START OF THE PROJECT") || strings.Contains(line, "START OF THIS PROJECT") {
 			if opts.debug {
-				log.Println("[debug] parser is in body")
+				log.Println("[" + getTimestamp() + "] [debug] parser is in body")
 			}
 			markHead = 0
 			markBody = 1
@@ -64,7 +70,7 @@ func parse(book string) ([]string, []string, []string) {
 
 		if strings.Contains(line, "END OF THE PROJECT") || strings.Contains(line, "END OF THIS PROJECT") {
 			if opts.debug {
-				log.Println("[debug] parser is in footer")
+				log.Println("[" + getTimestamp() + "] [debug] parser is in footer")
 			}
 			markBody = 0
 			markFoot = 1
@@ -111,7 +117,7 @@ func process(header, body []string) (string, string, []string, error) {
 			if len(match) == 2 {
 				title = match[1]
 				if opts.debug {
-					log.Println("[debug] title:", title)
+					log.Println("["+getTimestamp()+"] [debug] title:", title)
 				}
 			}
 		}
@@ -122,7 +128,7 @@ func process(header, body []string) (string, string, []string, error) {
 			if len(match) == 2 {
 				author = match[1]
 				if opts.debug {
-					log.Println("[debug] author:", author)
+					log.Println("["+getTimestamp()+"] [debug] author:", author)
 				}
 			}
 		}
@@ -149,7 +155,7 @@ func process(header, body []string) (string, string, []string, error) {
 	}
 
 	if opts.debug {
-		log.Println("[debug] paragraphs found:", len(paragraphs))
+		log.Println("["+getTimestamp()+"] [debug] paragraphs found:", len(paragraphs))
 	}
 
 	for _, paragraph := range paragraphs {
@@ -158,7 +164,7 @@ func process(header, body []string) (string, string, []string, error) {
 			if len(paragraph) > 90 && len(paragraph) < 113 {
 				quotes = append(quotes, paragraph)
 				if opts.debug {
-					log.Println("[debug] quote was found:", paragraph)
+					log.Println("["+getTimestamp()+"] [debug] quote was found:", paragraph)
 				}
 			}
 		}
@@ -190,20 +196,20 @@ func main() {
 		twitterCredentials.accessTokenSecret = os.Getenv("TWITTER_ACCESS_TOKEN_SECRET")
 
 		if opts.debug {
-			log.Println("[debug] twitter consumer key:", twitterCredentials.consumerKey)
-			log.Println("[debug] twitter consumer secret:", twitterCredentials.consumerSecret)
-			log.Println("[debug] twitter access token:", twitterCredentials.accessToken)
-			log.Println("[debug] twitter access token secret:", twitterCredentials.accessTokenSecret)
+			log.Println("["+getTimestamp()+"] [debug] twitter consumer key:", twitterCredentials.consumerKey)
+			log.Println("["+getTimestamp()+"] [debug] twitter consumer secret:", twitterCredentials.consumerSecret)
+			log.Println("["+getTimestamp()+"] [debug] twitter access token:", twitterCredentials.accessToken)
+			log.Println("["+getTimestamp()+"] [debug] twitter access token secret:", twitterCredentials.accessTokenSecret)
 		}
 
 		if twitterCredentials.consumerKey == "" || twitterCredentials.consumerSecret == "" || twitterCredentials.accessToken == "" || twitterCredentials.accessTokenSecret == "" {
-			log.Fatalln("[error] twitter API credentials are not configured")
+			log.Fatalln("[" + getTimestamp() + "] [error] twitter API credentials are not configured")
 		}
 	}
 
 	catalogFh, err := os.Open("catalog.txt")
 	if err != nil {
-		log.Fatalln("[error]", err)
+		log.Fatalln("["+getTimestamp()+"] [error]", err)
 	}
 
 	var catalog []string
@@ -227,7 +233,7 @@ func main() {
 				}
 			}
 			if book == "" {
-				log.Fatalln("[error] book not found -", number)
+				log.Fatalln("["+getTimestamp()+"] [error] book not found -", number)
 			}
 		} else {
 			rand.Seed(time.Now().UnixNano())
@@ -251,22 +257,22 @@ func main() {
 		}
 
 		if opts.debug {
-			log.Println("[debug] page link:", pageLink)
-			log.Println("[debug] book link:", bookLink)
+			log.Println("["+getTimestamp()+"] [debug] page link:", pageLink)
+			log.Println("["+getTimestamp()+"] [debug] book link:", bookLink)
 		}
 
 		resp, err := http.Get(bookLink)
 		if err != nil {
-			log.Fatalln("[error]", err)
+			log.Fatalln("["+getTimestamp()+"] [error]", err)
 		}
 
 		if resp.StatusCode != 200 {
 			downloadErrorCount = downloadErrorCount + 1
-			log.Println("[error] download response was", resp.StatusCode, "-", number)
+			log.Println("["+getTimestamp()+"] [error] download response was", resp.StatusCode, "-", number)
 			if opts.manual != 0 {
 				os.Exit(1)
 			} else if downloadErrorCount == 20 {
-				log.Fatalln("[error] download limit (20) reached")
+				log.Fatalln("[" + getTimestamp() + "] [error] download limit (20) reached")
 			} else {
 				continue
 			}
@@ -275,7 +281,7 @@ func main() {
 
 		bookBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Fatalln("[error]", err)
+			log.Fatalln("["+getTimestamp()+"] [error]", err)
 		}
 
 		// no data is yet needed from the parsed footer, so don't
@@ -284,7 +290,7 @@ func main() {
 
 		title, author, quotes, err := process(header, body)
 		if err != nil {
-			log.Println(err, "-", number)
+			log.Println("["+getTimestamp()+"]", err, "-", number)
 			if opts.manual != 0 {
 				os.Exit(0)
 			}
@@ -305,7 +311,7 @@ func main() {
 
 		if opts.twitter {
 			if opts.debug {
-				log.Println("[debug] posting to twitter")
+				log.Println("[" + getTimestamp() + "] [debug] posting to twitter")
 			}
 
 			config := oauth1.NewConfig(twitterCredentials.consumerKey, twitterCredentials.consumerSecret)
@@ -315,7 +321,7 @@ func main() {
 
 			_, _, err := client.Statuses.Update(quote+" "+pageLink, nil)
 			if err != nil {
-				log.Fatalln("[error]", err)
+				log.Fatalln("["+getTimestamp()+"] [error]", err)
 			}
 		}
 
