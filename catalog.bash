@@ -11,7 +11,7 @@ function warn {
     echo 'error'
 }
 
-MIRROR_URL='https://gutenberg.pglaf.org/cache/epub/feeds/'
+MIRROR_URL='https://aleph.pglaf.org/cache/epub/feeds/'
 
 echo -n 'downloading new archive - '
 WGET=$(wget --prefer-family=IPv4 --quiet -O rdf-files.tar.bz2.new "$MIRROR_URL/rdf-files.tar.bz2")

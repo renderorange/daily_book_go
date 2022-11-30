@@ -244,7 +244,7 @@ func main() {
 		}
 
 		pageLink := "https://gutenberg.org/ebooks/" + number
-		bookLink := "https://gutenberg.pglaf.org"
+		bookLink := "https://aleph.pglaf.org"
 
 		if len(number) == 1 {
 			bookLink = bookLink + "/0/" + number + "/" + book
