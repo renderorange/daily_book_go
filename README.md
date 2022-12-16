@@ -1,18 +1,17 @@
 # daily_book_go
 
-`daily_book_go` finds quotes in free ebooks at [project gutenberg](https://www.gutenberg.org) then tweets them.
+`daily_book_go` finds quotes in free ebooks at [project gutenberg](https://www.gutenberg.org).
 
 ## USAGE
 
 ```bash
 $ ./quote --help
-usage: ./quote [-d] [-m] <book number> [-t]
+usage: ./quote [-d] [-m] <book number>
 
 options:
   -d	print more information during the run
   -m int
     	manually specify the book number
-  -t	post the quote to twitter
 ```
 
 ### Find a quote for a random book
