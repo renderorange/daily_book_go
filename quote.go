@@ -5,8 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/dghubble/go-twitter/twitter"
-	"github.com/dghubble/oauth1"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -21,12 +19,11 @@ import (
 var opts struct {
 	debug   bool
 	manual  int
-	twitter bool
 }
 
 func init() {
 	flag.Usage = func() {
-		fmt.Printf("usage: %s [-d] [-m] <book number> [-t]\n\n", os.Args[0])
+		fmt.Printf("usage: %s [-d] [-m] <book number>\n\n", os.Args[0])
 
 		fmt.Println("options:")
 		flag.PrintDefaults()
@@ -34,7 +31,6 @@ func init() {
 
 	flag.BoolVar(&opts.debug, "d", false, "print more information during the run")
 	flag.IntVar(&opts.manual, "m", 0, "manually specify the book number")
-	flag.BoolVar(&opts.twitter, "t", false, "post the quote to twitter")
 }
 
 func getTimestamp() string {
@@ -182,31 +178,6 @@ func main() {
 
 	log.SetFlags(0)
 
-	var twitterCredentials struct {
-		consumerKey       string
-		consumerSecret    string
-		accessToken       string
-		accessTokenSecret string
-	}
-
-	if opts.twitter {
-		twitterCredentials.consumerKey = os.Getenv("TWITTER_CONSUMER_KEY")
-		twitterCredentials.consumerSecret = os.Getenv("TWITTER_CONSUMER_SECRET")
-		twitterCredentials.accessToken = os.Getenv("TWITTER_ACCESS_TOKEN")
-		twitterCredentials.accessTokenSecret = os.Getenv("TWITTER_ACCESS_TOKEN_SECRET")
-
-		if opts.debug {
-			log.Println("["+getTimestamp()+"] [debug] twitter consumer key:", twitterCredentials.consumerKey)
-			log.Println("["+getTimestamp()+"] [debug] twitter consumer secret:", twitterCredentials.consumerSecret)
-			log.Println("["+getTimestamp()+"] [debug] twitter access token:", twitterCredentials.accessToken)
-			log.Println("["+getTimestamp()+"] [debug] twitter access token secret:", twitterCredentials.accessTokenSecret)
-		}
-
-		if twitterCredentials.consumerKey == "" || twitterCredentials.consumerSecret == "" || twitterCredentials.accessToken == "" || twitterCredentials.accessTokenSecret == "" {
-			log.Fatalln("[" + getTimestamp() + "] [error] twitter API credentials are not configured")
-		}
-	}
-
 	catalogFh, err := os.Open("catalog.txt")
 	if err != nil {
 		log.Fatalln("["+getTimestamp()+"] [error]", err)
@@ -308,22 +279,6 @@ func main() {
 		quote := quotes[quoteIndex]
 
 		fmt.Printf("\ntitle: %s\nauthor: %s\n\n%s %s\n\n", title, author, quote, pageLink)
-
-		if opts.twitter {
-			if opts.debug {
-				log.Println("[" + getTimestamp() + "] [debug] posting to twitter")
-			}
-
-			config := oauth1.NewConfig(twitterCredentials.consumerKey, twitterCredentials.consumerSecret)
-			token := oauth1.NewToken(twitterCredentials.accessToken, twitterCredentials.accessTokenSecret)
-			httpClient := config.Client(oauth1.NoContext, token)
-			client := twitter.NewClient(httpClient)
-
-			_, _, err := client.Statuses.Update(quote+" "+pageLink, nil)
-			if err != nil {
-				log.Fatalln("["+getTimestamp()+"] [error]", err)
-			}
-		}
 
 		break
 	}
