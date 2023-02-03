@@ -92,18 +92,18 @@ func parse(book string) ([]string, []string, []string) {
 	return header, body, footer
 }
 
-func process(header, body []string) (string, string, []string, error) {
+func process(header, body []string) ([]string, error) {
 	var title, author string
 	var quotes []string
 
 	for _, line := range header {
 		if strings.Contains(line, "The New McGuffey") {
-			return "", "", nil, errors.New("[info] ebook is The New McGuffey Reader")
+			return nil, errors.New("[info] ebook is The New McGuffey Reader")
 		}
 
 		if strings.Contains(line, "Language:") {
 			if strings.Contains(line, "English") == false {
-				return "", "", nil, errors.New("[info] ebook isn't in English")
+				return nil, errors.New("[info] ebook isn't in English")
 			}
 		}
 
@@ -131,12 +131,12 @@ func process(header, body []string) (string, string, []string, error) {
 	}
 
 	if len(title) == 0 {
-		return "", "", nil, errors.New("[info] title was not found")
+		return nil, errors.New("[info] title was not found")
 
 	}
 
 	if len(author) == 0 {
-		return "", "", nil, errors.New("[info] author was not found")
+		return nil, errors.New("[info] author was not found")
 	}
 
 	var buildVariable string
@@ -167,10 +167,10 @@ func process(header, body []string) (string, string, []string, error) {
 	}
 
 	if len(quotes) == 0 {
-		return "", "", nil, errors.New("[info] quote was not found")
+		return nil, errors.New("[info] quote was not found")
 	}
 
-	return title, author, quotes, nil
+	return quotes, nil
 }
 
 func main() {
@@ -259,7 +259,7 @@ func main() {
 		// store the return.
 		header, body, _ := parse(string(bookBytes))
 
-		title, author, quotes, err := process(header, body)
+		quotes, err := process(header, body)
 		if err != nil {
 			log.Println("["+getTimestamp()+"]", err, "-", number)
 			if opts.manual != 0 {
@@ -278,7 +278,7 @@ func main() {
 
 		quote := quotes[quoteIndex]
 
-		fmt.Printf("\ntitle: %s\nauthor: %s\n\n%s %s\n\n", title, author, quote, pageLink)
+		fmt.Printf("%s %s\n", quote, pageLink)
 
 		break
 	}
