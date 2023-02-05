@@ -18,10 +18,6 @@ options:
 
 ```bash
 $ ./quote
-
-title: Tom Slade's Double Dare
-author: Percy Keese Fitzhugh
-
 "I think one of our boys from camp ought to do that," said one of the other scoutmasters. "How about you, Roy?"  https://gutenberg.org/ebooks/19590
 ```
 
@@ -29,10 +25,6 @@ author: Percy Keese Fitzhugh
 
 ```bash
 $ ./quote -m 220
-
-title: The Secret Sharer
-author: Joseph Conrad
-
 "Bless my soul! Do you mean, sir, in the dark amongst the lot of all them islands and reefs and shoals?"  https://gutenberg.org/ebooks/220
 ```
 
@@ -69,10 +61,6 @@ $ cat stderr.o
 [1649816232] [info] quote was not found - 27706
 [1649816232] [info] quote was not found - 16136
 $ cat stdout.o
-
-title: Phebe, Her Profession
-author: Anna Chapin Ray
-
 "I'm glad," she said slowly, as she rose. "No; don't come, Cousin Ted. I want to think it over."  https://gutenberg.org/ebooks/12584
 ```
 
